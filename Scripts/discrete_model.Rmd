@@ -1,0 +1,72 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Problem 1
+
+```{r}
+# Load libraries
+library(dplyr) 
+library(magrittr)
+library(tidyr)
+library(car)
+```
+
+## Load Medical Insurance Dataset
+
+```{r}
+ins_df = read.csv("insurance.csv")
+head(ins_df)
+```
+
+### Linear Regression Model with discrete variables
+```{r}
+# Remove continuous predictors
+subset_ins_df <- subset(ins_df, select = -c(age, bmi))
+head(subset_ins_df)
+```
+### Transform categorical variables
+```{r}
+# Turn the categorical variables and ordinal numeric into factors
+subset_ins_df$sex = as.factor(subset_ins_df$sex)
+subset_ins_df$children = as.factor(subset_ins_df$children)
+subset_ins_df$smoker = as.factor(subset_ins_df$smoker)
+subset_ins_df$region = as.factor(subset_ins_df$region)
+```
+
+```{r}
+# Fit the linear regression model predicting insurance charges
+fit <- lm(data=subset_ins_df, charges ~ sex + children + smoker + region)
+# Show coefficients, standard errors, and p values
+summary(fit)
+```
+From the summary table we can see that the factorizing of the categorical variables displays various impacts on y. For example, the northwest and southwest regions have a negative impact on insurance charges but the southeast has a positive impact on insurance charges. Another interesting pattern is with number of children, there does not appear to be a linear relationship between number of children and estimated coefficient. Having 5 children actually appears to have a negative impact on the price of insurance. However, this coefficient also has the highest standard error or most variability within its level. The "sexmale" predictor appears to have the lowest variability. 
+
+The most impactful estimated coefficient appears to be the "smokeryes" predictor. Charges increase by 23,498 dollars if the beneficiary is a smoker assuming all other predictors remain constant.
+
+### Checking Assumptions
+
+```{r}
+# Residuals against fitted values
+plot(fit, which=1, pch=16)
+```
+
+```{r}
+# Check relationship between predictor variables
+pairs(data=subset_ins_df, charges ~ ., pch=16, cex=1.5)
+```
+```{r}
+# Check residuals
+residualPlots(fit)
+```
+The residuals do not follow a random pattern and we cannot assume mean zero or linearity. The relationship between these discrete variables is not well represented by a linear model. From the summary table, the variances are not constant as well so we cannot assume homoscedasticity. Lastly, checking the qq plot does not indicate normality as the right side of the graph is longer and does not align with normality expectation. 
+
+```{r}
+qqPlot(residuals(fit))
+
+```
+

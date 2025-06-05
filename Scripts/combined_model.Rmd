@@ -1,0 +1,65 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Problem 2
+
+```{r}
+# Load libraries
+library(dplyr) 
+library(magrittr)
+library(tidyr)
+library(car)
+```
+
+## Load Medical Insurance Dataset
+
+```{r}
+ins_df = read.csv("insurance.csv")
+head(ins_df)
+```
+
+### Linear Regression Model with discrete and continuous variables
+```{r}
+# Turn the categorical variables and ordinal numeric into factors
+ins_df$sex = as.factor(ins_df$sex)
+ins_df$children = as.factor(ins_df$children)
+ins_df$smoker = as.factor(ins_df$smoker)
+ins_df$region = as.factor(ins_df$region)
+```
+
+```{r}
+# Fit the linear regression model predicting insurance charges
+fit <- lm(data=ins_df, charges ~ .)
+# Show coefficients, standard errors, and p values
+summary(fit)
+```
+Even when we include the continuous variables into the linear regression model, the "smokeryes" predictor has the largest estimated coefficient. This predictor is very impactful on predicting insurance charges. The introduction of the continuous variables altered the estimated coefficients of some of the variables significantly compared to when the model was solely discrete predictor variables. "Regionsoutheast" estimated coefficient for example increased in value significantly and flipped signs. There exists a lot of variability in the predictors especially in the children predictor variables. 
+
+### Checking Assumptions
+
+```{r}
+# Residuals against fitted values
+plot(fit, which=1, pch=16)
+```
+The residuals do not follow a random pattern and we cannot assume mean zero or linearity. The relationship between these discrete variables is not well represented by a linear model. From the summary table, the variances are not constant as well so we cannot assume homoscedasticity. Lastly, checking the qq plot does not indicate normality as both the left and ride side of the graph is longer and does not align with normality expectation. 
+
+```{r}
+# Check relationship between predictor variables
+pairs(data=ins_df, charges ~ ., pch=16, cex=1.5)
+```
+
+```{r}
+# Check residuals
+residualPlots(fit)
+```
+
+```{r}
+qqPlot(residuals(fit))
+
+```
+

@@ -1,0 +1,97 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Problem 1
+
+```{r}
+# Load libraries
+library(dplyr) 
+library(magrittr)
+library(tidyr)
+library(car)
+```
+
+## Load Medical Insurance Dataset
+
+```{r}
+ins_df = read.csv("insurance.csv")
+head(ins_df)
+```
+
+### Linear Regression Model with discrete variables
+```{r}
+# Remove continuous predictors
+subset_ins_df <- subset(ins_df, select = -c(age, bmi))
+head(subset_ins_df)
+```
+### Transform categorical variables
+```{r}
+# Turn the categorical variables and ordinal numeric into factors
+subset_ins_df$sex = as.factor(subset_ins_df$sex)
+subset_ins_df$children = as.factor(subset_ins_df$children)
+subset_ins_df$smoker = as.factor(subset_ins_df$smoker)
+subset_ins_df$region = as.factor(subset_ins_df$region)
+```
+
+```{r}
+# Fit the linear regression model predicting insurance charges
+fit <- lm(data=subset_ins_df, charges ~ sex + children + smoker + region)
+# Show coefficients, standard errors, and p values
+summary(fit)
+```
+
+### Checking Assumptions
+
+The residuals do not follow a random pattern and we cannot assume mean zero or linearity. The relationship between these discrete variables is not well represented by a linear model. From the summary table, the variances are not constant as well so we cannot assume homoscedasticity. Lastly, checking the qq plot does not indicate normality as the right side of the graph is longer and does not align with normality expectation. Forming a linear regression model with only discrete variables from the insurance dataset violates all of the standard assumptions. 
+
+```{r}
+# Residuals against fitted values
+plot(fit, which=1, pch=16)
+```
+
+```{r}
+# Check relationship between predictor variables
+pairs(data=subset_ins_df, charges ~ ., pch=16, cex=1.5)
+```
+```{r}
+# Check residuals
+residualPlots(fit)
+```
+
+```{r}
+# Check normality
+qqPlot(residuals(fit))
+
+```
+
+### Problem 2
+```{r}
+B = 200
+
+n <- nrow(subset_ins_df) # Get n
+fit <- lm(data=subset_ins_df, charges ~ sex + children + smoker + region) # Fit a linear model
+
+coef.boot <- matrix(0, B, 11) # store slope and intercept
+for (b in 1:B) {
+  indices = sample(seq(1,n), size=n, replace=T) # Get random indices
+  boot_sample = subset_ins_df[indices, ] 
+
+  m.boot = lm(data=boot_sample, charges ~ sex + children + smoker + region) # refit the model
+  
+  colnames(coef.boot) = c("intercept_se_boot", "sexmale_se_boot", "children1_se_boot", "children2_se_boot", "children3_se_boot", "children4_se_boot", "children5_se_boot", "smokeryes_se_boot", "regionnorthwest_se_boot", "regionsoutheast_se_boot", "regionsouthwest_se_boot")
+  
+  coef.boot[b,1:11] = summary(m.boot)$coefficients[,2] # Get bootstrap coefficients
+  
+}
+  
+head(coef.boot)
+```
+
+
+
+
